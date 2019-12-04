@@ -1,7 +1,7 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 
-char ssid[] = "TeslaWiFi";
+char ssid[] = "Teslawifi";
 char password[] = "elonmusk";
 WiFiServer server(80);
 WiFiClient client;
@@ -24,7 +24,7 @@ void setup() {
   //Serial.flush();
   Serial.println();
   Serial.print("Server IP is: ");
-  Serial.println(IP);
+  Serial.println(IP); 
 }
 
 void loop() {
@@ -35,35 +35,54 @@ void loop() {
     Serial.println(str_json);
     Serial.println("STR TO CHAR ...");
     json = strTochar(str_json, json);
+    
     deserialize();
-    delay(100);
+    delay(1000);
   }
+  delay(50);
 }
 
 void deserialize() {
   Serial.println("Deserializing...");
-  StaticJsonDocument<128> doc;
+  StaticJsonDocument<200> doc;
 
   deserializeJson(doc, json);
 
-  Serial.println("Deserializing... TEXT");
+  Serial.println("  Deserializing... TEXT");
   const char* text = doc["text"]; // "The RSSI I receive from your WiFi is: "
-  Serial.println("Deserializing... AVG");
+  Serial.println("  Deserializing... AVG");
   const char* avg_client = doc["avg"]; // "float"
-
+  avg_client = ("%.1f",avg_client);
   Serial.println(text);
+  Serial.print("Average: ");
   Serial.println(avg_client);
 
   JsonArray data = doc["data"];
+  
+  Serial.println("RSSI mesured: ");
+  Serial.print("[ ");
   avg = 0.0;
   for (int i = 0; i < 5; i++) {
     rssi[i] = data[i];
     avg += rssi[i];
     Serial.print(rssi[i]);
+    Serial.print(", ");
+  }
+  Serial.println(" ]");
+  avg /= 5;
+  avg = ("%.1f",avg);
+  Serial.println();
+  Serial.print("The average mesure of the data recived is:");
+  Serial.println(avg);
+  if((avg-atof(avg_client))<0.01 || (avg-atof(avg_client)>0.01)){
+    Serial.println("The mean recived and the one we calculated coincide");
+  }else{
+    Serial.println("The mean recived and the one we calculated do not coincide");
+    Serial.println("Probably the data recived was incorrect. This iteration wont be saved on the DB.");
   }
   Serial.println();
-  avg /= 5;
-}
+  Serial.println("Waiting for new data");
+  }
 
 char* strTochar(String txt, char* c) {
   if (WiFi.status() != WL_CONNECTED) {

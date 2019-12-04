@@ -70,7 +70,8 @@ void loop() {
         }
         Serial.println();
         Serial.print("Average: ");
-        Serial.println(avg);
+        Serial.print(avg);
+        Serial.println("db ");
       } else {
         Serial.println("Please, first connect to Network.");
       }
@@ -100,17 +101,17 @@ void menu() {
   Serial.println();
   Serial.println("-------------- MENU ------------");
   Serial.println("1. Connect to Network.");
-  Serial.println("2. Disconnect to Network.");
+  Serial.println("2. Disconnect from Network.");
   Serial.println("3. Measure RSSI from Network.");
   Serial.println("4. Send data to server.");
   Serial.println();
 }
 
 void serializable() {
-  Serial.println(_client.connect(server, 80));
+  //Serial.println(_client.connect(server, 80));
   if (_client.connect(server, 80)) {
 
-    StaticJsonDocument<128> doc;
+    StaticJsonDocument<200> doc;
     char buf[100];
     gcvt(avg, 4, buf);
 
@@ -118,15 +119,18 @@ void serializable() {
     doc["avg"] = buf;
 
     JsonArray data = doc.createNestedArray("data");
+    
     for (int i = 0; i < 5; i++)
     {
       data.add(rssi[i]);
+      //Serial.print("Writing: ");
+      //Serial.println(rssi[i]);
     }
 
     serializeJson(doc, (Client&)_client);
     //client.write(doc);
   } else {
-    Serial.println("CANNOT CONNECTED TO SERVER!");
+    Serial.println("COULD NOT CONNECT TO THE SERVER!");
   }
   _client.stop();
   delay(1000);
@@ -151,7 +155,7 @@ void connectToWifi() {
       Serial.println(WiFi.localIP());
     }
     else {
-      Serial.println("ERROR: CAN NOT CONNECTED TO NETWORK");
+      Serial.println("ERROR: CAN NOT CONNECT TO NETWORK");
     }
   }
 }
